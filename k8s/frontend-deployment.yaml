@@ -1,0 +1,31 @@
+# Frontend (Flutter web) Deployment: nginx serving static build
+# Image must be linux/amd64 for GKE
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempconv-frontend
+  labels:
+    app: tempconv-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempconv-frontend
+  template:
+    metadata:
+      labels:
+        app: tempconv-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: gcr.io/TempConverter-0/tempconv-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "20m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package tempconv;
+
+option go_package = "github.com/Nandana12019/tempconv-grpc/proto;proto";
+
+service TempConvService {
+  rpc CelsiusToFahrenheit (CelsiusRequest) returns (FahrenheitReply);
+  rpc FahrenheitToCelsius (FahrenheitRequest) returns (CelsiusReply);
+}
+
+message CelsiusRequest {
+  double celsius = 1;
+}
+
+message FahrenheitReply {
+  double fahrenheit = 1;
+}
+
+message FahrenheitRequest {
+  double fahrenheit = 1;
+}
+
+message CelsiusReply {
+  double celsius = 1;
+}

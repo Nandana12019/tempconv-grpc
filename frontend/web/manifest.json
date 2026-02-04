@@ -1,0 +1,9 @@
+{
+  "name": "TempConv",
+  "short_name": "TempConv",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff5722",
+  "description": "Temperature conversion (Celsius / Fahrenheit)"
+}

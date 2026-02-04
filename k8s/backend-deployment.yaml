@@ -1,0 +1,43 @@
+# Backend (Go) Deployment: runs the temperature conversion API
+# Replicas can be scaled for load; GKE nodes are amd64, so image must be linux/amd64
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempconv-backend
+  labels:
+    app: tempconv-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tempconv-backend
+  template:
+    metadata:
+      labels:
+        app: tempconv-backend
+    spec:
+      containers:
+        - name: backend
+          image: gcr.io/TempConverter-0/tempconv-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"

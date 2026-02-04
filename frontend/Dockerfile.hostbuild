@@ -1,0 +1,8 @@
+# Alternative: build Flutter web on the host first, then build this image.
+# From project root: cd frontend && flutter build web && docker build -f Dockerfile.hostbuild -t tempconv-frontend:latest .
+# This avoids needing a Flutter image inside Docker (faster, smaller context).
+FROM nginx:alpine
+RUN rm -rf /usr/share/nginx/html/*
+COPY build/web /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,34 @@
+# GKE Ingress: single host, path-based routing
+# /api/* -> backend, everything else -> frontend
+# After apply, get external IP: kubectl get ingress -n <namespace>
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tempconv-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    # Optional: use a static IP reserved in GCP
+    # kubernetes.io/ingress.global-static-ip-name: "tempconv-ip"
+spec:
+  defaultBackend:
+    service:
+      name: tempconv-frontend
+      port:
+        number: 80
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: tempconv-backend
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tempconv-frontend
+                port:
+                  number: 80
