@@ -19,8 +19,25 @@ type F2CRequest struct {
 	Fahrenheit float64 `json:"fahrenheit"`
 }
 
+// CORS middleware
+func withCORS(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		h(w, r)
+	}
+}
+
 func main() {
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	// IMPORTANT: Use k8s service name, not localhost
+	conn, err := grpc.Dial("tempconv-backend-grpc:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,7 +45,7 @@ func main() {
 
 	client := pb.NewTempConvServiceClient(conn)
 
-	http.HandleFunc("/api/c2f", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/c2f", withCORS(func(w http.ResponseWriter, r *http.Request) {
 		var req C2FRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -45,9 +62,9 @@ func main() {
 		}
 
 		json.NewEncoder(w).Encode(map[string]float64{"fahrenheit": resp.Fahrenheit})
-	})
+	}))
 
-	http.HandleFunc("/api/f2c", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/f2c", withCORS(func(w http.ResponseWriter, r *http.Request) {
 		var req F2CRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -64,8 +81,9 @@ func main() {
 		}
 
 		json.NewEncoder(w).Encode(map[string]float64{"celsius": resp.Celsius})
-	})
+	}))
 
 	log.Println("REST gateway running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
+

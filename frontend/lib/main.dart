@@ -31,14 +31,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // In dev (Flutter web server on localhost:port), call backend at localhost:8080.
-  // In production (same host), use relative /api.
+  // REST Gateway (GKE LoadBalancer)
   String get _apiBase {
-    final base = Uri.base;
-    if (base.host == 'localhost' && base.port != 80 && base.port != 443) {
-      return 'http://localhost:8080/api';
-    }
-    return '/api';
+    return 'http://35.223.167.112:8080/api';
   }
 
   String? _error;
@@ -56,15 +51,19 @@ class _HomePageState extends State<HomePage> {
     }
 
     try {
-      final uri = Uri.parse('$_apiBase/celsius-to-fahrenheit').replace(queryParameters: {'c': celsiusStr});
-      final response = await http.get(uri);
+      final uri = Uri.parse('$_apiBase/c2f');
+
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'celsius': c}),
+      );
+
       final r = jsonDecode(response.body) as Map<String, dynamic>;
-      if (r['error'] != null) {
-        setState(() => _error = r['error'] as String);
-        return;
-      }
       final f = (r['fahrenheit'] as num).toDouble();
-      setState(() => _result = '${c.toStringAsFixed(1)} °C = ${f.toStringAsFixed(1)} °F');
+
+      setState(() =>
+          _result = '${c.toStringAsFixed(1)} °C = ${f.toStringAsFixed(1)} °F');
     } catch (e) {
       setState(() => _error = 'Network error: $e');
     }
@@ -82,15 +81,19 @@ class _HomePageState extends State<HomePage> {
     }
 
     try {
-      final uri = Uri.parse('$_apiBase/fahrenheit-to-celsius').replace(queryParameters: {'f': fahrenheitStr});
-      final response = await http.get(uri);
+      final uri = Uri.parse('$_apiBase/f2c');
+
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'fahrenheit': f}),
+      );
+
       final r = jsonDecode(response.body) as Map<String, dynamic>;
-      if (r['error'] != null) {
-        setState(() => _error = r['error'] as String);
-        return;
-      }
       final c = (r['celsius'] as num).toDouble();
-      setState(() => _result = '${f.toStringAsFixed(1)} °F = ${c.toStringAsFixed(1)} °C');
+
+      setState(() =>
+          _result = '${f.toStringAsFixed(1)} °F = ${c.toStringAsFixed(1)} °C');
     } catch (e) {
       setState(() => _error = 'Network error: $e');
     }
@@ -122,7 +125,8 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: cController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     hintText: 'e.g. 100',
                     border: OutlineInputBorder(),
@@ -130,7 +134,8 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 FilledButton(
-                  onPressed: () => _celsiusToFahrenheit(cController.text.trim()),
+                  onPressed: () =>
+                      _celsiusToFahrenheit(cController.text.trim()),
                   child: const Text('Convert to °F'),
                 ),
                 const SizedBox(height: 32),
@@ -141,7 +146,8 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: fController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     hintText: 'e.g. 212',
                     border: OutlineInputBorder(),
@@ -149,16 +155,20 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 FilledButton(
-                  onPressed: () => _fahrenheitToCelsius(fController.text.trim()),
+                  onPressed: () =>
+                      _fahrenheitToCelsius(fController.text.trim()),
                   child: const Text('Convert to °C'),
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 24),
-                  Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  Text(_error!,
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.error)),
                 ],
                 if (_result != null) ...[
                   const SizedBox(height: 24),
-                  Text(_result!, style: Theme.of(context).textTheme.titleMedium),
+                  Text(_result!,
+                      style: Theme.of(context).textTheme.titleMedium),
                 ],
               ],
             ),
@@ -168,3 +178,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
